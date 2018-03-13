@@ -25,7 +25,6 @@ public class ProjectCalloutService {
         public void doCallout(Id oppId) {
             Opportunity opp = [SELECT Id, Name, Account.Name, CloseDate, Amount FROM Opportunity WHERE Id =: oppId];
             String token = ServiceTokens__c.getInstance('ProjectServiceToken').Token__c;
-            System.debug('opp ' + opp);
 
             Http http = new Http();
             HttpRequest request = new HttpRequest();
@@ -36,7 +35,6 @@ public class ProjectCalloutService {
             request.setBody(serializeOpp(opp));
 
             HttpResponse response = http.send(request);
-            System.debug('response: ' + response);
 
             if (response.getStatusCode() != 201)
                 opp.StageName = 'Resubmit Project';
