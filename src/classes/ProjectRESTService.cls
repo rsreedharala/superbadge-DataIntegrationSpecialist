@@ -14,17 +14,14 @@ global class ProjectRESTService {
         // upsert project
         Project__c project;
 
-        List<Project__c> projects = [
-                SELECT Id
-                FROM Project__c
-                WHERE ProjectRef__c =: ProjectRef AND Opportunity__c =: OpportunityId
-                LIMIT 1
-        ];
+        List<Project__c> projects = queryProject(ProjectRef, OpportunityId);
 
         project = projects.isEmpty() ? new Project__c() : projects.get(0);
 
         // update project fields
-        project.Opportunity__c = OpportunityId;
+        if (projects.isEmpty()) {
+            project.Opportunity__c = opp.Id;
+        }
         project.ProjectRef__c = ProjectRef;
         project.Name = ProjectName;
         project.Start_Date__c = StartDate;
@@ -44,5 +41,14 @@ global class ProjectRESTService {
         }
 
         return 'OK';
+    }
+
+    private static List<Project__c> queryProject(String ProjectRef, String OpportunityId) {
+        return [
+                SELECT Id
+                FROM Project__c
+                WHERE ProjectRef__c =: ProjectRef AND Opportunity__c =: OpportunityId
+                LIMIT 1
+        ];
     }
 }
