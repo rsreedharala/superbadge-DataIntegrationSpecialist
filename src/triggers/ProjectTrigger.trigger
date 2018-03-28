@@ -4,7 +4,8 @@ trigger ProjectTrigger on Project__c (before update, after update, before insert
 
     if (Trigger.isAfter && Trigger.isUpdate) {
         List<Project__c> filtered = filterStatusChanged(Trigger.oldMap, Trigger.new, STATUS_BILLABLE);
-        BillingCalloutService.callBillingService(filtered[0].ProjectRef__c, filtered[0].Billable_Amount__c);
+        if (!filtered.isEmpty())
+            BillingCalloutService.callBillingService(filtered[0].Id);
     }
 
     /**
