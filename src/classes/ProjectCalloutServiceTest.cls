@@ -10,39 +10,31 @@ private class ProjectCalloutServiceTest {
         insert st;
     }
 
-    private static testMethod void testFailure() {
-        Opportunity opp = createOpportunity();
+    @isTest
+    private static void testFailure() {
+        Opportunity opp = OpportunityFactory.createOpportunity(OpportunitySelector.STAGE_CLOSED_WON);
+        insert opp;
 
         Test.startTest();
         Test.setMock(HttpCalloutMock.class, new ProjectCalloutServiceMockFailure());
         ProjectCalloutService.postOpportunityToPMS(new List<Id>{opp.Id});
         Test.stopTest();
 
-        System.assertEquals('Resubmit Project', queryOpportunity(opp.Id).StageName);
+        List<Opportunity> opportunities = OpportunitySelector.getOpportunities(new Set<Id>{opp.Id});
+        System.assertEquals(OpportunitySelector.STAGE_RESUBMIT_PROJECT, opportunities.get(0).StageName);
     }
 
-    private static testMethod void testSuccess() {
-        Opportunity opp = createOpportunity();
+    @isTest
+    private static void testSuccess() {
+        Opportunity opp = OpportunityFactory.createOpportunity(OpportunitySelector.STAGE_CLOSED_WON);
+        insert opp;
 
         Test.startTest();
         Test.setMock(HttpCalloutMock.class, new ProjectCalloutServiceMock());
         ProjectCalloutService.postOpportunityToPMS(new List<Id>{opp.Id});
         Test.stopTest();
 
-        System.assertEquals('Submitted Project', queryOpportunity(opp.Id).StageName);
-    }
-
-    private static Opportunity createOpportunity() {
-        Opportunity opp = new Opportunity(
-                Name = 'TestOpportunity',
-                StageName = 'Closed Won',
-                CloseDate = Date.today().addYears(1)
-        );
-        insert opp;
-        return opp;
-    }
-
-    private static Opportunity queryOpportunity(Id oppId) {
-        return [SELECT StageName FROM Opportunity WHERE Id =: oppId LIMIT 1];
+        List<Opportunity> opportunities = OpportunitySelector.getOpportunities(new Set<Id>{opp.Id});
+        System.assertEquals(OpportunitySelector.STAGE_SUBMITTED_PROJECT, opportunities.get(0).StageName);
     }
 }

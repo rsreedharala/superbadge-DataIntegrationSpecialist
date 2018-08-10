@@ -5,22 +5,15 @@ public class BillingCalloutService {
 
     @future(callout=true)
     public static void callBillingService(String projectId) {
-        List<Project__c> projects = [
-                SELECT Id, ProjectRef__c, Billable_Amount__c
-                FROM Project__c
-                WHERE Id =: projectId LIMIT 1];
+        List<Project__c> projects = ProjectSelector.getProjects(new Set<Id>{projectId});
 
-        if (projects.isEmpty() || projects[0].ProjectRef__c == null || projects[0].Billable_Amount__c == null)
+        if (projects.isEmpty() || projects[0].ProjectRef__c == null || projects[0].Billable_Amount__c == null) {
+            // log error
             return;
+        }
 
-        Project__c project = projects[0];
-
-        // project
-        BillingServiceProxy.project soapProject = new BillingServiceProxy.project();
-        soapProject.projectRef = project.ProjectRef__c;
-        soapProject.billAmount = project.Billable_Amount__c;
-        soapProject.username = CREDENTIALS.Username__c;
-        soapProject.password = CREDENTIALS.Password__c;
+        // prepare proxy
+        BillingServiceProxy.project soapProject = prepareProjectProxy(projects[0]);
 
         // callout
         BillingServiceProxy.InvoicesPortSoap11 port = new BillingServiceProxy.InvoicesPortSoap11();
@@ -28,8 +21,20 @@ public class BillingCalloutService {
 
         // update project on success
         if (response == 'OK') {
-            project.Status__c = 'Billed';
+            Project__c project = new Project__c(
+                    Id = projectId,
+                    Status__c = 'Billed'
+            );
             update project;
         }
+    }
+
+    private static BillingServiceProxy.project prepareProjectProxy(Project__c project) {
+        BillingServiceProxy.project soapProject = new BillingServiceProxy.project();
+        soapProject.projectRef = project.ProjectRef__c;
+        soapProject.billAmount = project.Billable_Amount__c;
+        soapProject.username = CREDENTIALS.Username__c;
+        soapProject.password = CREDENTIALS.Password__c;
+        return soapProject;
     }
 }

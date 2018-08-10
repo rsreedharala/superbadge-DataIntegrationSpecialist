@@ -7,21 +7,15 @@ global class ProjectRESTService {
      */
     @HttpPost
     global static String postProjectData(String ProjectRef, String ProjectName, String OpportunityId, Date StartDate, Date EndDate, Double Amount, String Status) {
-        // update opportunity
-        Opportunity opp = new Opportunity(Id = OpportunityId);
+        // create opportunity for update
+        Opportunity opp = new Opportunity();
+        opp.Id = OpportunityId;
         opp.DeliveryInstallationStatus__c = 'In Progress';
 
-        // upsert project
-        Project__c project;
+        // prepare project
+        Project__c project = getProjectOrCreateNew(ProjectRef, OpportunityId);
 
-        List<Project__c> projects = queryProject(ProjectRef, OpportunityId);
-
-        project = projects.isEmpty() ? new Project__c() : projects.get(0);
-
-        // update project fields
-        if (projects.isEmpty()) {
-            project.Opportunity__c = opp.Id;
-        }
+        // set project values
         project.ProjectRef__c = ProjectRef;
         project.Name = ProjectName;
         project.Start_Date__c = StartDate;
@@ -43,12 +37,17 @@ global class ProjectRESTService {
         return 'OK';
     }
 
-    private static List<Project__c> queryProject(String ProjectRef, String OpportunityId) {
-        return [
-                SELECT Id
-                FROM Project__c
-                WHERE ProjectRef__c =: ProjectRef AND Opportunity__c =: OpportunityId
-                LIMIT 1
-        ];
+    private static Project__c getProjectOrCreateNew(String projectRef, String oppId) {
+        List<Project__c> projects = ProjectSelector.getProjects(projectRef, oppId);
+        Project__c project;
+
+        if (projects.isEmpty()) {
+            project = new Project__c();
+            project.Opportunity__c = oppId;
+        } else {
+            project = projects.get(0);
+        }
+
+        return project;
     }
 }

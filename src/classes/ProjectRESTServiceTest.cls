@@ -8,7 +8,8 @@ private class ProjectRESTServiceTest {
     private static final String PROJECT_NAME = 'Project Name';
     private static final String PROJECT_STATUS = 'Running';
 
-    @testSetup static void setup() {
+    @testSetup
+    static void setup() {
         Opportunity opp = new Opportunity(
                 Name = 'OpportunityName',
                 StageName = 'Prospecting',
@@ -22,8 +23,9 @@ private class ProjectRESTServiceTest {
         insert project;
     }
 
-    @isTest static void testPostCreate() {
-        Id oppId = [SELECT Id FROM Opportunity].Id;
+    @isTest
+    static void testPostCreate() {
+        Id oppId = OpportunitySelector.getAllOpportunities(1).get(0).Id;
 
         Test.startTest();
 
@@ -32,8 +34,8 @@ private class ProjectRESTServiceTest {
 
         Test.stopTest();
 
-        Opportunity opp = [SELECT Id, DeliveryInstallationStatus__c FROM Opportunity];
-        List<Project__c> projects = [SELECT Name, Status__c, ProjectRef__c FROM Project__c];
+        Opportunity opp = OpportunitySelector.getAllOpportunities(1).get(0);
+        List<Project__c> projects = ProjectSelector.getAllProjects(10);
 
         System.assertEquals('OK', result);
         System.assertEquals(2, projects.size());
@@ -45,8 +47,9 @@ private class ProjectRESTServiceTest {
         System.assertEquals(PROJECT_STATUS, project.Status__c);
     }
 
-    @isTest static void testPostUpdate() {
-        Id oppId = [SELECT Id FROM Opportunity].Id;
+    @isTest
+    static void testPostUpdate() {
+        Id oppId = OpportunitySelector.getAllOpportunities(1).get(0).Id;
 
         Test.startTest();
 
@@ -55,20 +58,19 @@ private class ProjectRESTServiceTest {
 
         Test.stopTest();
 
-        Opportunity opp = [SELECT Id, DeliveryInstallationStatus__c FROM Opportunity];
-        List<Project__c> projects = [SELECT Name, Status__c FROM Project__c];
+        Opportunity opp = OpportunitySelector.getAllOpportunities(1).get(0);
+        List<Project__c> projects = ProjectSelector.getAllProjects(1);
 
         System.assertEquals('OK', result);
         System.assertEquals(1, projects.size());
 
-        Project__c project = projects[0];
-
         System.assertEquals('In progress', opp.DeliveryInstallationStatus__c);
-        System.assertEquals(PROJECT_NAME, project.Name);
-        System.assertEquals(PROJECT_STATUS, project.Status__c);
+        System.assertEquals(PROJECT_NAME, projects[0].Name);
+        System.assertEquals(PROJECT_STATUS, projects[0].Status__c);
     }
 
-    @isTest static void testPostInvalidOpportunityId() {
+    @isTest
+    static void testPostInvalidOpportunityId() {
         String invalidOppId = '0061r00000uf2gc';
 
         Test.startTest();
@@ -80,7 +82,7 @@ private class ProjectRESTServiceTest {
 
         System.assertNotEquals('OK', result);
 
-        Opportunity opp = [SELECT Id, DeliveryInstallationStatus__c FROM Opportunity];
+        Opportunity opp = OpportunitySelector.getAllOpportunities(1).get(0);
         System.assertNotEquals('In progress', opp.DeliveryInstallationStatus__c);
     }
 

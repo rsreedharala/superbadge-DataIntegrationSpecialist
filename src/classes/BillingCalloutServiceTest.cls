@@ -9,7 +9,8 @@ private class BillingCalloutServiceTest {
     private static final String STATUS_BILLED = 'Billed';
     private static final String STATUS_RUNNING = 'Running';
 
-    @testSetup static void setup() {
+    @testSetup
+    static void setup() {
         // create opportunity and project
         Opportunity opp = new Opportunity(
                 Name = 'OpportunityName',
@@ -33,7 +34,8 @@ private class BillingCalloutServiceTest {
         insert sc;
     }
 
-    @isTest private static void testSuccess() {
+    @isTest
+    private static void testSuccess() {
         Test.setMock(WebServiceMock.class, new BillingCalloutServiceMock());
 
         Test.startTest();
@@ -44,7 +46,8 @@ private class BillingCalloutServiceTest {
         System.assertEquals(STATUS_BILLED, project.Status__c);
     }
 
-    @isTest private static void testFailure() {
+    @isTest
+    private static void testFailure() {
         Test.setMock(WebServiceMock.class, new BillingCalloutServiceMockFailure());
 
         Test.startTest();
